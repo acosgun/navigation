@@ -317,11 +317,74 @@ namespace base_local_planner {
   }
 
   bool TrajectoryPlannerROS::rotateToGoal(const tf::Stamped<tf::Pose>& global_pose, const tf::Stamped<tf::Pose>& robot_vel, double goal_th, geometry_msgs::Twist& cmd_vel){
+
+    //std::cout<<"rotateToGoal"<<std::endl;
+
     double yaw = tf::getYaw(global_pose.getRotation());
     double vel_yaw = tf::getYaw(robot_vel.getRotation());
     cmd_vel.linear.x = 0;
     cmd_vel.linear.y = 0;
     double ang_diff = angles::shortest_angular_distance(yaw, goal_th);
+
+
+
+    /*
+    if(ang_diff > yaw_goal_tolerance_)
+      {
+	cmd_vel.angular.z = 0.3;
+	return true;
+      }
+    else if (ang_diff < -yaw_goal_tolerance_)
+      {
+	cmd_vel.angular.z = -0.3;
+	return true;
+      }
+    else
+      {
+	cmd_vel.angular.z = 0.0;
+	return false;
+      }
+*/
+
+    double rot_speed = 0.6;
+    
+    if(ang_diff > 3*yaw_goal_tolerance_)
+      {
+	cmd_vel.angular.z = rot_speed;
+	return true;
+      }
+    else if(ang_diff > 2*yaw_goal_tolerance_)
+      {
+	cmd_vel.angular.z = rot_speed*0.5;
+	return true;
+      }    
+    else if(ang_diff > yaw_goal_tolerance_)
+      {
+	cmd_vel.angular.z = rot_speed*0.25;
+	return true;
+      }
+    else if (ang_diff < -3 * yaw_goal_tolerance_)
+      {
+	cmd_vel.angular.z = -rot_speed;
+	return true;
+      }
+    else if (ang_diff < -2 * yaw_goal_tolerance_)
+      {
+	cmd_vel.angular.z = -rot_speed * 0.5;
+	return true;
+      }
+    else if (ang_diff < -yaw_goal_tolerance_)
+      {
+	cmd_vel.angular.z = -rot_speed * 0.25;
+	return true;
+      }
+    else
+      {
+	cmd_vel.angular.z = 0.0;
+	return false;
+      }
+    
+
 
     double v_theta_samp = ang_diff > 0.0 ? std::min(max_vel_th_,
         std::max(min_in_place_vel_th_, ang_diff)) : std::max(min_vel_th_,
